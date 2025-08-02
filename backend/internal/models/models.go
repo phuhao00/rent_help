@@ -16,6 +16,7 @@ type User struct {
 	Phone       string             `bson:"phone" json:"phone"`
 	Avatar      string             `bson:"avatar" json:"avatar"`
 	Role        string             `bson:"role" json:"role"` // "tenant", "landlord", "admin"
+	IsVerified  bool               `bson:"is_verified" json:"is_verified"`
 	Verified    bool               `bson:"verified" json:"verified"`
 	DateOfBirth *time.Time         `bson:"date_of_birth" json:"date_of_birth,omitempty"`
 	Gender      string             `bson:"gender" json:"gender,omitempty"` // "male", "female", "other"
@@ -55,9 +56,15 @@ type Address struct {
 	City       string  `bson:"city" json:"city"`
 	State      string  `bson:"state" json:"state"`
 	Country    string  `bson:"country" json:"country"`
+	ZipCode    string  `bson:"zip_code" json:"zip_code"`
 	PostalCode string  `bson:"postal_code" json:"postal_code"`
 	Latitude   float64 `bson:"latitude" json:"latitude"`
 	Longitude  float64 `bson:"longitude" json:"longitude"`
+}
+
+type GeoLocation struct {
+	Type        string    `bson:"type" json:"type"`               // "Point"
+	Coordinates []float64 `bson:"coordinates" json:"coordinates"` // [longitude, latitude]
 }
 
 type SocialLinks struct {
@@ -80,40 +87,45 @@ type Rating struct {
 }
 
 type Property struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Title         string             `bson:"title" json:"title" binding:"required"`
-	Description   string             `bson:"description" json:"description" binding:"required"`
-	Type          string             `bson:"type" json:"type" binding:"required"` // "apartment", "house", "condo", "townhouse", "studio"
-	Price         float64            `bson:"price" json:"price" binding:"required"`
-	Currency      string             `bson:"currency" json:"currency"`
-	Address       string             `bson:"address" json:"address" binding:"required"`
-	Location      Location           `bson:"location" json:"location"`
-	Bedrooms      int                `bson:"bedrooms" json:"bedrooms"`
-	Bathrooms     int                `bson:"bathrooms" json:"bathrooms"`
-	SquareFeet    int                `bson:"square_feet" json:"square_feet"`
-	Features      PropertyFeatures   `bson:"features" json:"features"`
-	Amenities     []string           `bson:"amenities" json:"amenities"`
-	Images        []PropertyImage    `bson:"images" json:"images"`
-	Videos        []string           `bson:"videos" json:"videos,omitempty"`
-	VirtualTour   string             `bson:"virtual_tour" json:"virtual_tour,omitempty"`
-	FloorPlan     string             `bson:"floor_plan" json:"floor_plan,omitempty"`
-	Available     bool               `bson:"available" json:"available"`
-	AvailableFrom *time.Time         `bson:"available_from" json:"available_from,omitempty"`
-	LeaseTerms    LeaseTerms         `bson:"lease_terms" json:"lease_terms"`
-	Rules         PropertyRules      `bson:"rules" json:"rules"`
-	Utilities     PropertyUtilities  `bson:"utilities" json:"utilities"`
-	Safety        PropertySafety     `bson:"safety" json:"safety"`
-	Parking       PropertyParking    `bson:"parking" json:"parking"`
-	OwnerID       primitive.ObjectID `bson:"owner_id" json:"owner_id"`
-	ViewCount     int                `bson:"view_count" json:"view_count"`
-	FavoriteCount int                `bson:"favorite_count" json:"favorite_count"`
-	Rating        PropertyRating     `bson:"rating" json:"rating"`
-	Status        string             `bson:"status" json:"status"` // "draft", "published", "rented", "maintenance"
-	Featured      bool               `bson:"featured" json:"featured"`
-	Priority      int                `bson:"priority" json:"priority"`
-	Tags          []string           `bson:"tags" json:"tags,omitempty"`
-	CreatedAt     time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt     time.Time          `bson:"updated_at" json:"updated_at"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Title             string             `bson:"title" json:"title" binding:"required"`
+	Description       string             `bson:"description" json:"description" binding:"required"`
+	Type              string             `bson:"type" json:"type" binding:"required"` // "apartment", "house", "condo", "townhouse", "studio"
+	Price             float64            `bson:"price" json:"price" binding:"required"`
+	Currency          string             `bson:"currency" json:"currency"`
+	Address           Address            `bson:"address" json:"address"`
+	Location          GeoLocation        `bson:"location" json:"location"`
+	Bedrooms          int                `bson:"bedrooms" json:"bedrooms"`
+	Bathrooms         int                `bson:"bathrooms" json:"bathrooms"`
+	Area              int                `bson:"area" json:"area"`
+	SquareFeet        int                `bson:"square_feet" json:"square_feet"`
+	Features          PropertyFeatures   `bson:"features" json:"features"`
+	Amenities         []string           `bson:"amenities" json:"amenities"`
+	Images            []string           `bson:"images" json:"images"`
+	PropertyImages    []PropertyImage    `bson:"property_images" json:"property_images"`
+	Videos            []string           `bson:"videos" json:"videos,omitempty"`
+	VirtualTour       string             `bson:"virtual_tour" json:"virtual_tour,omitempty"`
+	FloorPlan         string             `bson:"floor_plan" json:"floor_plan,omitempty"`
+	Available         bool               `bson:"available" json:"available"`
+	AvailableFrom     time.Time          `bson:"available_from" json:"available_from"`
+	LeaseTerms        []string           `bson:"lease_terms" json:"lease_terms"`
+	PetsAllowed       bool               `bson:"pets_allowed" json:"pets_allowed"`
+	SmokingAllowed    bool               `bson:"smoking_allowed" json:"smoking_allowed"`
+	UtilitiesIncluded []string           `bson:"utilities_included" json:"utilities_included"`
+	Rules             PropertyRules      `bson:"rules" json:"rules"`
+	Utilities         PropertyUtilities  `bson:"utilities" json:"utilities"`
+	Safety            PropertySafety     `bson:"safety" json:"safety"`
+	Parking           PropertyParking    `bson:"parking" json:"parking"`
+	OwnerID           primitive.ObjectID `bson:"owner_id" json:"owner_id"`
+	ViewCount         int                `bson:"view_count" json:"view_count"`
+	FavoriteCount     int                `bson:"favorite_count" json:"favorite_count"`
+	Rating            PropertyRating     `bson:"rating" json:"rating"`
+	Status            string             `bson:"status" json:"status"` // "draft", "published", "rented", "maintenance"
+	Featured          bool               `bson:"featured" json:"featured"`
+	Priority          int                `bson:"priority" json:"priority"`
+	Tags              []string           `bson:"tags" json:"tags,omitempty"`
+	CreatedAt         time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt         time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type PropertyFeatures struct {

@@ -25,16 +25,15 @@ export default function LoginPage() {
     try {
       const response = await authApi.login({ email, password })
       
-      // Get user profile
-      const userProfile = await fetch('/api/v1/users/profile', {
-        headers: {
-          'Authorization': `Bearer ${response.access_token}`
-        }
-      }).then(res => res.json())
-
-      login(userProfile, response.access_token)
-      router.push('/dashboard')
+      // Use user data from login response
+      if (response.user) {
+        login(response.user, response.access_token)
+        router.push('/dashboard')
+      } else {
+        setError('登录响应格式错误')
+      }
     } catch (err: any) {
+      console.error('Login error:', err)
       setError(err.response?.data?.error || '登录失败，请重试')
     } finally {
       setLoading(false)

@@ -150,7 +150,7 @@ export default function PropertiesPage() {
                       {property.available ? '可租' : '已租'}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{property.location.address}</p>
+                  <p className="text-gray-600 text-sm mb-2">{property.address.street}, {property.address.city}</p>
                   <p className="text-gray-500 text-sm mb-3 line-clamp-2">{property.description}</p>
                   <div className="flex justify-between items-center">
                     <div>
@@ -161,19 +161,19 @@ export default function PropertiesPage() {
                       <Link href={`/properties/${property.id}`}>查看详情</Link>
                     </Button>
                   </div>
-                  {property.features && property.features.length > 0 && (
+                  {property.amenities && property.amenities.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
-                      {property.features.slice(0, 3).map((feature, index) => (
+                      {property.amenities.slice(0, 3).map((amenity, index) => (
                         <span
                           key={index}
                           className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
                         >
-                          {feature}
+                          {amenity}
                         </span>
                       ))}
-                      {property.features.length > 3 && (
+                      {property.amenities.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                          +{property.features.length - 3}
+                          +{property.amenities.length - 3}
                         </span>
                       )}
                     </div>

@@ -15,6 +15,16 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
+  // 安全获取数组长度的辅助函数
+  const safeLength = (arr: any[] | null | undefined): number => {
+    return Array.isArray(arr) ? arr.length : 0
+  }
+
+  // 安全过滤数组的辅助函数
+  const safeFilter = (arr: any[] | null | undefined, filterFn: (item: any) => boolean): any[] => {
+    return Array.isArray(arr) ? arr.filter(filterFn) : []
+  }
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login')
@@ -25,15 +35,27 @@ export default function DashboardPage() {
       try {
         if (user?.role === 'landlord') {
           // Fetch properties for landlords
-          const propertiesData = await propertyApi.getProperties()
-          setProperties(propertiesData.slice(0, 5)) // Show latest 5
+          try {
+            const propertiesData = await propertyApi.getProperties()
+            setProperties(Array.isArray(propertiesData) ? propertiesData.slice(0, 5) : []) // Show latest 5
+          } catch (error) {
+            console.error('Failed to fetch properties:', error)
+            setProperties([])
+          }
         }
         
         // Fetch bookings for all users
-        const bookingsData = await bookingApi.getBookings({ limit: 5 })
-        setBookings(bookingsData)
+        try {
+          const bookingsData = await bookingApi.getBookings({ limit: 5 })
+          setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        } catch (error) {
+          console.error('Failed to fetch bookings:', error)
+          setBookings([])
+        }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
+        setProperties([])
+        setBookings([])
       } finally {
         setLoading(false)
       }
@@ -102,19 +124,19 @@ export default function DashboardPage() {
                     {user?.role === 'landlord' ? '我的房源' : '我的预订'}
                   </h3>
                   <p className="text-2xl font-bold text-blue-700">
-                    {user?.role === 'landlord' ? properties.length : bookings.length}
+                    {user?.role === 'landlord' ? safeLength(properties) : safeLength(bookings)}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-green-900">活跃预订</h3>
                   <p className="text-2xl font-bold text-green-700">
-                    {bookings.filter(b => b.status === 'confirmed').length}
+                    {safeLength(safeFilter(bookings, (b: any) => b.status === 'confirmed'))}
                   </p>
                 </div>
                 <div className="bg-yellow-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-yellow-900">待处理</h3>
                   <p className="text-2xl font-bold text-yellow-700">
-                    {bookings.filter(b => b.status === 'pending').length}
+                    {safeLength(safeFilter(bookings, (b: any) => b.status === 'pending'))}
                   </p>
                 </div>
               </div>
@@ -131,7 +153,7 @@ export default function DashboardPage() {
                 <CardDescription>您最近发布的房源</CardDescription>
               </CardHeader>
               <CardContent>
-                {properties.length === 0 ? (
+                {safeLength(properties) === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-500">您还没有发布任何房源</p>
                     <Button className="mt-4" onClick={() => router.push('/properties/new')}>
@@ -140,11 +162,11 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {properties.map((property) => (
-                      <div key={property.id} className="border rounded-lg p-4">
-                        <h4 className="font-semibold">{property.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{property.location.city}</p>
-                        <p className="text-lg font-bold mt-2">¥{property.price}/月</p>
+                    {properties?.map((property) => (
+                      <div key={property?.id || property?._id} className="border rounded-lg p-4">
+                        <h4 className="font-semibold">{property?.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{property?.location?.city}</p>
+                        <p className="text-lg font-bold mt-2">¥{property?.price}/月</p>
                         <div className="flex justify-between items-center mt-3">
                           <span className={`px-2 py-1 rounded text-xs ${
                             property.available 
@@ -158,7 +180,7 @@ export default function DashboardPage() {
                           </Button>
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 )}
               </CardContent>
@@ -181,7 +203,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {bookings.length === 0 ? (
+              {safeLength(bookings) === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">
                     {user?.role === 'landlord' 
@@ -192,15 +214,15 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="border rounded-lg p-4">
+                  {bookings?.map((booking) => (
+                    <div key={booking?.id || booking?._id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-semibold">预订 #{booking.id.slice(-6)}</h4>
+                          <h4 className="font-semibold">预订 #{booking.id?.slice(-6) || 'N/A'}</h4>
                           <p className="text-sm text-gray-600 mt-1">
                             {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
                           </p>
-                          <p className="text-lg font-bold mt-2">¥{booking.total_price}</p>
+                          <p className="text-lg font-bold mt-2">¥{booking.total_price || 0}</p>
                         </div>
                         <span className={`px-2 py-1 rounded text-xs ${
                           booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -214,7 +236,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )) || []}
                 </div>
               )}
             </CardContent>

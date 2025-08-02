@@ -40,9 +40,16 @@ func main() {
 	userService := services.NewUserService(db)
 	propertyService := services.NewPropertyService(db)
 	bookingService := services.NewBookingService(db)
+	seedService := services.NewSeedService(db)
+
+	// Seed database with initial data if empty
+	ctx := context.Background()
+	if err := seedService.SeedDatabase(ctx); err != nil {
+		log.Printf("Warning: Failed to seed database: %v", err)
+	}
 
 	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService, cfg)
 	propertyHandler := handlers.NewPropertyHandler(propertyService)
 	bookingHandler := handlers.NewBookingHandler(bookingService)
 
@@ -51,9 +58,9 @@ func main() {
 
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:3001", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -77,7 +84,7 @@ func main() {
 
 		// Protected routes
 		protected := api.Group("")
-		protected.Use(middleware.AuthMiddleware())
+		protected.Use(middleware.AuthMiddleware(cfg))
 		{
 			// User routes
 			users := protected.Group("/users")

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { TokenResponse, LoginRequest, RegisterRequest, User, Property, Booking } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

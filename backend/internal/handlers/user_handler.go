@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"rent-help-backend/internal/config"
 	"rent-help-backend/internal/models"
 	"rent-help-backend/internal/services"
 
@@ -15,11 +16,13 @@ import (
 
 type UserHandler struct {
 	userService *services.UserService
+	config      *config.Config
 }
 
-func NewUserHandler(userService *services.UserService) *UserHandler {
+func NewUserHandler(userService *services.UserService, cfg *config.Config) *UserHandler {
 	return &UserHandler{
 		userService: userService,
+		config:      cfg,
 	}
 }
 
@@ -91,15 +94,25 @@ func (h *UserHandler) Login(c *gin.Context) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte("your-secret-key"))
+	tokenString, err := token.SignedString([]byte(h.config.JWTSecret))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	response := models.TokenResponse{
-		AccessToken: tokenString,
-		ExpiresIn:   24 * 3600, // 24 hours in seconds
+	response := gin.H{
+		"access_token": tokenString,
+		"expires_in":   24 * 3600, // 24 hours in seconds
+		"user": gin.H{
+			"id":          user.ID.Hex(),
+			"email":       user.Email,
+			"full_name":   user.FullName,
+			"role":        user.Role,
+			"phone":       user.Phone,
+			"is_verified": user.IsVerified,
+			"created_at":  user.CreatedAt,
+			"updated_at":  user.UpdatedAt,
+		},
 	}
 
 	c.JSON(http.StatusOK, response)

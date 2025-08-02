@@ -4,8 +4,36 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/go-1.21-blue.svg)](https://golang.org/)
 [![Node Version](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+[![API Status](https://img.shields.io/badge/API-fully%20functional-brightgreen.svg)](#)
 
 一个使用最前沿技术栈构建的全栈租房服务平台，连接房东和租客，提供安全、便捷、透明的租房服务。
+
+> 🎉 **最新更新 (2025-08-02)**: 前后端API连接已完全修复，注册登录功能正常工作，Dashboard组件null安全性得到全面增强！
+
+## 🎯 项目状态
+
+### ✅ 当前功能状态
+- **🔐 用户认证**: ✅ 注册和登录功能完全正常
+- **🔗 API连接**: ✅ 前后端API完全连通
+- **🖥️ Dashboard**: ✅ 仪表板组件null安全性已修复
+- **🐳 Docker服务**: ✅ 所有容器服务健康运行
+- **📊 数据库**: ✅ MongoDB和Redis连接正常
+- **🛡️ CORS配置**: ✅ 跨域问题已解决
+
+### 🆕 最近更新 (2025-08-02)
+- ✅ **修复CORS配置**: 更新了main.go中的CORS中间件，允许前端访问
+- ✅ **环境变量修复**: 修正了docker-compose.dev.yml中的NEXT_PUBLIC_API_URL
+- ✅ **Dashboard安全性**: 添加了全面的null安全检查和helper函数
+- ✅ **JWT认证**: 完善了认证中间件配置
+- ✅ **数据库种子**: 添加了数据库初始化服务
+- ✅ **错误处理**: 解决了所有运行时null指针异常
+
+### 🚀 服务状态
+- **后端API**: `http://localhost:8081` - 🟢 运行正常
+- **前端应用**: `http://localhost:3001` - 🟢 运行正常  
+- **MongoDB**: `localhost:27018` - 🟢 连接健康
+- **Redis**: `localhost:6380` - 🟢 连接健康
 
 ## ✨ 功能特性
 
@@ -524,6 +552,143 @@ func (s *PropertyService) GetProperty(id string) (*models.Property, error) {
 }
 ```
 
+## 🔧 故障排除
+
+### 🐛 常见问题
+
+#### 1. 前端无法连接后端API
+**症状**: 前端显示网络错误或CORS错误
+```bash
+# 检查后端服务状态
+docker-compose -f docker-compose.dev.yml logs backend
+
+# 检查CORS配置
+curl -I -X OPTIONS http://localhost:8081/api/v1/auth/login \
+  -H "Origin: http://localhost:3001" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+**解决方案**:
+- 确保后端在8081端口运行
+- 检查CORS配置是否包含前端域名
+- 验证环境变量`NEXT_PUBLIC_API_URL`正确设置
+
+#### 2. Dashboard页面显示null错误
+**症状**: `Cannot read properties of null (reading 'length')`
+```javascript
+// 检查数据获取
+console.log('Properties:', properties);
+console.log('Bookings:', bookings);
+```
+
+**解决方案**:
+- 确保使用safeLength和safeFilter helper函数
+- 添加可选链操作符 (`?.`)
+- 检查API返回数据格式
+
+#### 3. Docker容器启动失败
+**症状**: 容器无法启动或健康检查失败
+```bash
+# 检查容器日志
+docker-compose -f docker-compose.dev.yml logs [service-name]
+
+# 检查容器状态
+docker-compose -f docker-compose.dev.yml ps
+
+# 重建容器
+docker-compose -f docker-compose.dev.yml up -d --build
+```
+
+**解决方案**:
+- 检查端口是否被占用
+- 确保Docker有足够的内存和存储空间
+- 验证环境变量配置
+
+#### 4. MongoDB连接失败
+**症状**: `Failed to connect to MongoDB`
+```bash
+# 检查MongoDB容器
+docker-compose -f docker-compose.dev.yml logs mongodb
+
+# 测试连接
+docker exec -it renthelp_mongodb_dev mongosh \
+  mongodb://admin:password123@localhost:27017/renthelp?authSource=admin
+```
+
+**解决方案**:
+- 验证MongoDB URI格式
+- 检查用户名密码
+- 确保MongoDB容器健康运行
+
+#### 5. 用户认证失败
+**症状**: JWT token验证失败或登录异常
+```bash
+# 检查JWT配置
+echo $JWT_SECRET
+
+# 测试登录API
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+**解决方案**:
+- 检查JWT_SECRET环境变量
+- 验证token格式和有效期
+- 确保认证中间件正确配置
+
+### 🔍 调试工具
+
+#### 开发调试
+```bash
+# 启用详细日志
+export GIN_MODE=debug
+
+# 监控API请求
+docker-compose -f docker-compose.dev.yml logs -f backend
+
+# 检查前端构建
+docker-compose -f docker-compose.dev.yml logs -f frontend
+```
+
+#### 性能监控
+```bash
+# 监控容器资源使用
+docker stats
+
+# 检查数据库性能
+docker exec -it renthelp_mongodb_dev mongosh --eval "db.stats()"
+
+# Redis性能监控
+docker exec -it renthelp_redis_dev redis-cli monitor
+```
+
+### 🆘 快速修复命令
+
+```bash
+# 完全重置开发环境
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml up -d --build
+
+# 重启特定服务
+docker-compose -f docker-compose.dev.yml restart [service-name]
+
+# 清理Docker资源
+docker system prune -f
+docker volume prune -f
+
+# 重新安装前端依赖
+docker-compose -f docker-compose.dev.yml exec frontend npm install
+```
+
+### 📞 获取帮助
+
+如果问题仍未解决，请：
+1. 🔍 查看[Issues页面](https://github.com/phuhao00/rent_help/issues)寻找类似问题
+2. 📝 创建新Issue，包含详细的错误信息和重现步骤
+3. 💬 加入我们的Discord讨论群获取实时帮助
+```
+
 ### 📊 监控和日志
 
 #### 健康检查配置
@@ -700,6 +865,90 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, onUpdate }) => {
 };
 
 export default UserProfile;
+```
+
+## 📋 快速参考
+
+### 🔧 常用命令
+
+#### Docker操作
+```bash
+# 启动所有服务
+docker-compose -f docker-compose.dev.yml up -d
+
+# 查看服务状态
+docker-compose -f docker-compose.dev.yml ps
+
+# 查看实时日志
+docker-compose -f docker-compose.dev.yml logs -f
+
+# 重启服务
+docker-compose -f docker-compose.dev.yml restart [service-name]
+
+# 停止并删除所有容器
+docker-compose -f docker-compose.dev.yml down
+```
+
+#### API测试
+```bash
+# 用户注册
+curl -X POST http://localhost:8081/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123","name":"Test User","role":"tenant"}'
+
+# 用户登录
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+
+# 健康检查
+curl http://localhost:8081/health
+```
+
+#### 数据库操作
+```bash
+# 连接MongoDB
+docker exec -it renthelp_mongodb_dev mongosh mongodb://admin:password123@localhost:27017/renthelp?authSource=admin
+
+# 连接Redis
+docker exec -it renthelp_redis_dev redis-cli
+
+# 备份数据库
+docker exec renthelp_mongodb_dev mongodump --uri="mongodb://admin:password123@localhost:27017/renthelp?authSource=admin" --out=/tmp/backup
+```
+
+### 🚀 服务端口
+
+| 服务 | 内部端口 | 外部端口 | 访问地址 |
+|------|----------|----------|----------|
+| 前端 | 3000 | 3001 | http://localhost:3001 |
+| 后端API | 8080 | 8081 | http://localhost:8081 |
+| MongoDB | 27017 | 27018 | mongodb://localhost:27018 |
+| Redis | 6379 | 6380 | redis://localhost:6380 |
+
+### 🔑 默认配置
+
+#### 环境变量
+```bash
+# 后端
+PORT=8080
+MONGODB_URI=mongodb://admin:password123@mongodb:27017/renthelp?authSource=admin
+JWT_SECRET=your-secret-key
+DB_NAME=rent_help
+
+# 前端
+NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
+```
+
+#### 数据库凭据
+```bash
+# MongoDB
+Username: admin
+Password: password123
+Database: renthelp
+
+# Redis
+Password: (无密码)
 ```
 
 ### 🧪 测试指南

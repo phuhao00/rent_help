@@ -44,7 +44,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	user := &models.User{
 		Email:    req.Email,
 		Password: req.Password,
-		Name:     req.Name,
+		FullName: req.Name,
 		Phone:    req.Phone,
 		Role:     req.Role,
 	}
@@ -59,7 +59,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		"user": gin.H{
 			"id":    user.ID,
 			"email": user.Email,
-			"name":  user.Name,
+			"name":  user.FullName,
 			"role":  user.Role,
 		},
 	})

@@ -14,7 +14,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:      getEnv("PORT", "8080"),
-		MongoURI:  getEnv("MONGO_URI", "mongodb://localhost:27017"),
+		MongoURI:  getEnv("MONGODB_URI", "mongodb://localhost:27017"),
 		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
 		DBName:    getEnv("DB_NAME", "rent_help"),
 	}
